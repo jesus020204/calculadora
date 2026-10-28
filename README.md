@@ -1,17 +1,19 @@
-# calculadora
+# Calculadora Flutter - Programacion 3
 
-A new Flutter project.
+Aplicacion de calculadora desarrollada en Flutter aplicando el principio **KISS** (Keep It Simple, Stupid) y buenas practicas de arquitectura limpia.
 
-## Getting Started
+## Caracteristicas
+- **Operaciones Basicas:** Suma, resta, multiplicacion y division.
+- **Funciones Avanzadas:** Porcentaje (`%`), cambio de signo (`+/-`), borrado del ultimo caracter (`C`) y limpieza completa (`CE`).
+- **Expresion en Pantalla:** Visualizacion en tiempo real de la operacion antes de obtener el resultado.
+- **Pantalla de Informacion:** Vista con datos del desarrollador y navegacion fluida de ida y vuelta.
 
-This project is a starting point for a Flutter application.
+## Estructura del Proyecto
+- `lib/main.dart`: Punto de entrada de la aplicacion.
+- `lib/routes/app_routes.dart`: Manejo centralizado de rutas y navegacion.
+- `lib/screens/home_screen.dart`: Interfaz principal y logica matematica de la calculadora.
+- `lib/screens/info_screen.dart`: Pantalla con la informacion del desarrollador.
 
-A few resources to get you started if this is your first Flutter project:
-
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Desarrollador
+- **Nombre:** Jesús
+- **Asignatura:** Programacion 3
