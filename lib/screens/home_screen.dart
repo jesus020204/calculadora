@@ -8,120 +8,126 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  String _output = "0";
+  String _display = '0';
+  String _expression = '';
+  double? _firstNum;
+  String? _operator;
+  bool _isNewNumber = true;
 
-  void _buttonPressed(String buttonText) {
+  void _onButtonPressed(String value) {
     setState(() {
-      if (buttonText == "CE") {
-        _output = "0";
-      } else if (buttonText == "C") {
-        if (_output.length > 1) {
-          _output = _output.substring(0, _output.length - 1);
+      if (value == 'CE') {
+        _display = '0';
+        _expression = '';
+        _firstNum = null;
+        _operator = null;
+        _isNewNumber = true;
+      } else if (value == 'C') {
+        if (_display.length > 1) {
+          _display = _display.substring(0, _display.length - 1);
         } else {
-          _output = "0";
+          _display = '0';
+          _isNewNumber = true;
         }
-      } else if (buttonText == "=") {
-        _output = _calculateResult(_output);
-      } else if (buttonText == "+/-") {
-        // Resuelve la operación actual y le cambia el signo
-        String current = _calculateResult(_output);
-        if (current != "0" && current != "Error") {
-          _output = current.startsWith("-")
-              ? current.substring(1)
-              : "-$current";
+      } else if (value == '+/-') {
+        if (_display != '0' && _display != 'Error') {
+          if (_display.startsWith('-')) {
+            _display = _display.substring(1);
+          } else {
+            _display = '-$_display';
+          }
         }
-      } else if (buttonText == "%") {
-        // Resuelve la operación actual y la divide entre 100
-        String current = _calculateResult(_output);
-        if (current != "Error") {
-          double val = (double.tryParse(current) ?? 0) / 100;
-          _output = val.toString();
-          if (_output.endsWith(".0"))
-            _output = _output.substring(0, _output.length - 2);
+      } else if (value == '%') {
+        if (_display != 'Error') {
+          double num = double.tryParse(_display) ?? 0;
+          _display = (num / 100).toString();
+          _isNewNumber = true;
         }
-      } else if (buttonText == "+" ||
-          buttonText == "-" ||
-          buttonText == "×" ||
-          buttonText == "÷") {
-        if (!_output.endsWith("+") &&
-            !_output.endsWith("-") &&
-            !_output.endsWith("×") &&
-            !_output.endsWith("÷")) {
-          _output += buttonText;
+      } else if (value == '+' || value == '-' || value == '×' || value == '÷') {
+        if (_display != 'Error') {
+          _firstNum = double.tryParse(_display);
+          _operator = value;
+          _expression = '$_display $value';
+          _isNewNumber = true;
+        }
+      } else if (value == '=') {
+        if (_firstNum != null && _operator != null && _display != 'Error') {
+          double secondNum = double.tryParse(_display) ?? 0;
+          _expression = '$_expression $_display =';
+          _calculateResult(_firstNum!, secondNum, _operator!);
+          _firstNum = null;
+          _operator = null;
+          _isNewNumber = true;
         }
       } else {
-        if (_output == "0") {
-          _output = buttonText;
+        if (_isNewNumber) {
+          if (value == '.') {
+            _display = '0.';
+          } else {
+            _display = value;
+          }
+          _isNewNumber = false;
         } else {
-          _output += buttonText;
+          if (value == '.') {
+            if (!_display.contains('.')) {
+              _display += value;
+            }
+          } else {
+            if (_display == '0') {
+              _display = value;
+            } else {
+              _display += value;
+            }
+          }
         }
       }
     });
   }
 
-  String _calculateResult(String expression) {
-    try {
-      String op = "";
-
-      // Buscamos el operador, ignorando si el primer número es negativo
-      for (int i = 1; i < expression.length; i++) {
-        if (expression[i] == "+" ||
-            expression[i] == "-" ||
-            expression[i] == "×" ||
-            expression[i] == "÷") {
-          op = expression[i];
-          break;
-        }
+  void _calculateResult(double first, double second, String op) {
+    double result = 0;
+    if (op == '+') {
+      result = first + second;
+    } else if (op == '-') {
+      result = first - second;
+    } else if (op == '×') {
+      result = first * second;
+    } else if (op == '÷') {
+      if (second == 0) {
+        _display = 'Error';
+        return;
       }
+      result = first / second;
+    }
 
-      if (op.isEmpty) return expression;
-
-      int opIndex = expression.indexOf(op, 1);
-      if (opIndex == -1) return expression;
-
-      double n1 = double.tryParse(expression.substring(0, opIndex)) ?? 0;
-      double n2 = double.tryParse(expression.substring(opIndex + 1)) ?? 0;
-      double result = 0;
-
-      if (op == "+") result = n1 + n2;
-      if (op == "-") result = n1 - n2;
-      if (op == "×") result = n1 * n2;
-      if (op == "÷") {
-        if (n2 == 0) return "Error";
-        result = n1 / n2;
-      }
-
-      String finalResult = result.toString();
-      if (finalResult.endsWith(".0")) {
-        finalResult = finalResult.substring(0, finalResult.length - 2);
-      }
-      return finalResult;
-    } catch (e) {
-      return "Error";
+    if (result % 1 == 0) {
+      _display = result.toInt().toString();
+    } else {
+      _display = result.toString();
     }
   }
 
-  Widget _buildButton(String buttonText, Color color, Color textColor) {
+  Widget _buildButton(
+    String text, {
+    Color? color,
+    Color textColor = Colors.white,
+  }) {
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.all(6.0),
+        padding: const EdgeInsets.all(4.0),
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: color,
-            padding: const EdgeInsets.symmetric(vertical: 22.0),
-            elevation: 2,
+            backgroundColor: color ?? Colors.grey[850],
+            foregroundColor: textColor,
+            padding: const EdgeInsets.all(20.0),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(24), // Diseño más premium
+              borderRadius: BorderRadius.circular(12.0),
             ),
           ),
-          onPressed: () => _buttonPressed(buttonText),
+          onPressed: () => _onButtonPressed(text),
           child: Text(
-            buttonText,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w600,
-              color: textColor,
-            ),
+            text,
+            style: const TextStyle(fontSize: 22.0, fontWeight: FontWeight.bold),
           ),
         ),
       ),
@@ -130,25 +136,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Definimos los colores aquí para mantener el código limpio
-    final Color numColor = Colors.grey[850]!;
-    final Color opColor = Colors.deepOrangeAccent;
-    final Color actionColor = Colors.grey[400]!;
-    final Color textWhite = Colors.white;
-    final Color textBlack = Colors.black87;
-
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Calculadora'),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.black87,
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
         actions: [
           IconButton(
-            icon: const Icon(Icons.info_outline, size: 28),
-            tooltip: 'Información',
-            onPressed: () => Navigator.pushNamed(context, '/info'),
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              Navigator.pushNamed(context, '/info');
+            },
           ),
         ],
       ),
@@ -156,82 +155,72 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Expanded(
             child: Container(
+              padding: const EdgeInsets.all(24.0),
               alignment: Alignment.bottomRight,
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-              child: Text(
-                _output,
-                style: const TextStyle(
-                  fontSize: 64,
-                  fontWeight: FontWeight.w300,
-                  color: Colors.black87,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    _expression,
+                    style: const TextStyle(fontSize: 20.0, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _display,
+                    style: const TextStyle(
+                      fontSize: 48.0,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-          Container(
-            padding: const EdgeInsets.only(
-              bottom: 24.0,
-              left: 12.0,
-              right: 12.0,
-              top: 16.0,
-            ),
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 20,
-                  spreadRadius: 5,
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    _buildButton("CE", actionColor, textBlack),
-                    _buildButton("C", actionColor, textBlack),
-                    _buildButton("%", actionColor, textBlack),
-                    _buildButton("÷", opColor, textWhite),
-                  ],
-                ),
-                Row(
-                  children: [
-                    _buildButton("7", numColor, textWhite),
-                    _buildButton("8", numColor, textWhite),
-                    _buildButton("9", numColor, textWhite),
-                    _buildButton("×", opColor, textWhite),
-                  ],
-                ),
-                Row(
-                  children: [
-                    _buildButton("4", numColor, textWhite),
-                    _buildButton("5", numColor, textWhite),
-                    _buildButton("6", numColor, textWhite),
-                    _buildButton("-", opColor, textWhite),
-                  ],
-                ),
-                Row(
-                  children: [
-                    _buildButton("1", numColor, textWhite),
-                    _buildButton("2", numColor, textWhite),
-                    _buildButton("3", numColor, textWhite),
-                    _buildButton("+", opColor, textWhite),
-                  ],
-                ),
-                Row(
-                  children: [
-                    _buildButton("+/-", numColor, textWhite),
-                    _buildButton("0", numColor, textWhite),
-                    _buildButton(".", numColor, textWhite),
-                    _buildButton("=", Colors.green[500]!, textWhite),
-                  ],
-                ),
-              ],
-            ),
+          Column(
+            children: [
+              Row(
+                children: [
+                  _buildButton('CE', color: Colors.redAccent),
+                  _buildButton('C', color: Colors.orangeAccent),
+                  _buildButton('%', color: Colors.grey[700]),
+                  _buildButton('÷', color: Colors.blueAccent),
+                ],
+              ),
+              Row(
+                children: [
+                  _buildButton('7'),
+                  _buildButton('8'),
+                  _buildButton('9'),
+                  _buildButton('×', color: Colors.blueAccent),
+                ],
+              ),
+              Row(
+                children: [
+                  _buildButton('4'),
+                  _buildButton('5'),
+                  _buildButton('6'),
+                  _buildButton('-', color: Colors.blueAccent),
+                ],
+              ),
+              Row(
+                children: [
+                  _buildButton('1'),
+                  _buildButton('2'),
+                  _buildButton('3'),
+                  _buildButton('+', color: Colors.blueAccent),
+                ],
+              ),
+              Row(
+                children: [
+                  _buildButton('+/-'),
+                  _buildButton('0'),
+                  _buildButton('.'),
+                  _buildButton('=', color: Colors.green),
+                ],
+              ),
+            ],
           ),
         ],
       ),
